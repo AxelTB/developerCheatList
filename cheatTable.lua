@@ -2,16 +2,18 @@
 
 return {
     ["LUA"] = {
-        sticky      = false,
+        sticky  = false,
         path    = "lua",
-        icon        = "",
-        pattern       = { "%a%.lua" , "lua" },
+        icon    = "",
+        pattern = { "%a%.lua"},
+        l   = {"http://www.lua.org/manual/5.2/"},
 
     },
     ["Vim"] = {
         sticky      = false,
         path    = "vim",
         icon        = "",
-        pattern       = { "vim" , " vim " },
+        pattern       = { " vim " },
+        l   = {"aaa"},
     }
 }

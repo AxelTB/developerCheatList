@@ -15,7 +15,6 @@ local radical      = require("radical"        )
 --local filetree     = require("customMenu.filetree")
 local cheatTable = require("cheatCode.cheatTable")
 
-
 local module = {}
 capi ={client=client}
 
@@ -44,7 +43,7 @@ local function new(basePath)
                     --If pattern found
                     if string.match(c.name,pattern) then
                         cheatList[name]=obj
-                        print("Load",c.name,":",pattern)
+                        print("Load",c.name,":",pattern,"@",obj.l)
                     end
                 end
             end
@@ -63,6 +62,21 @@ local function new(basePath)
                 for name, cheat in pairs(cheatList) do
                     glob:add_item({text=name, sub_menu = function() 
                                 local parent = radical.context()
+                                -- Web links
+                                if cheat.links then
+                                    parent:add_item(util.table.join({text="Links",sub_menu= function()
+                                                    local linkMenu = radical.context()
+                                                    for j,link in pairs(cheat.links) do
+                                                        linkMenu:add_item(util.table.join({text=link, button1= function()
+                                                                        util.spawn("xdg-open "..link)
+                                                                    end}))
+                                                    end
+                                                    return linkMenu
+                                                end}))
+                                else
+                                    print("No link for",name)
+                                end
+                                -- Local files
                                 local lsDir=io.popen('ls '..cheatsPath..cheat.path)
                                 for line in lsDir:lines() do
                                     parent:add_item(util.table.join({text=line,button1= function()
@@ -70,7 +84,7 @@ local function new(basePath)
                                                 end}))
                                 end
                                 lsDir:close()
-                                
+
                                 return parent
                             end})
 
@@ -78,6 +92,8 @@ local function new(basePath)
             else
                 print("ERR@cheatCode: Unable to load cheat")
             end
+
+
         end
 
 
