@@ -38,10 +38,8 @@ local function new(basePath)
 
     function searchCheats()
         local cheatList={}
-        cheatList['foo']={path='../.cheatCode'}
         --Scan clients
         for i,c in ipairs(capi.client.get()) do
-            print("Client",c.name)
             local name,obj
 
             --print(name,":",obj.pathName)
@@ -71,7 +69,7 @@ local function new(basePath)
     end
 
     function show(geometry)
-        print("Show")
+
         if not glob then
             glob = radical.context()
             glob.parent_geometry = geometry
@@ -92,8 +90,6 @@ local function new(basePath)
                                                     end
                                                     return linkMenu
                                                 end}))
-                                else
-                                    print("No link for",name)
                                 end
                                 -- Local files
                                 local lsDir=io.popen('ls '..cheatsPath..cheat.path)

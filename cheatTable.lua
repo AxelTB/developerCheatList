@@ -30,7 +30,7 @@ module.search =function (string)
         for ii,pattern in pairs(obj.pattern) do
             --If patterns found
             if string.match(string,pattern) then
-                print("Load",string,":",name)
+                --print("Load",string,":",name)
                 --Search hit
                 return name,obj
             end
