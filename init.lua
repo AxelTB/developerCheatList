@@ -36,41 +36,38 @@ local function new(basePath)
         end
     end
 
-    function searchClientCheats()
+    function searchCheats()
         local cheatList={}
         cheatList['foo']={path='../.cheatCode'}
         --Scan clients
         for i,c in ipairs(capi.client.get()) do
             print("Client",c.name)
-            --Confront with cheatTable
-            for name,obj in pairs(cheatTable) do
-                for typeN,inData in pairs(obj) do
-                    print(typeN,inData)
-                end
+            local name,obj
 
-                --print(name,":",obj.pathName)
-                for ii,pattern in pairs(obj.pattern) do
-                    --print("P:",pattern)
-                    --If pattern found
-                    if string.match(c.name,pattern) then
-                        cheatList[name]=obj
-                        print("Load",c.name,":",pattern,"@",obj.links)
-                    end
-                end
+            --print(name,":",obj.pathName)
+            name,obj = cheatTable.search(c.name)
+            --If something found
+            if name ~= nil and obj ~= nil then
+                cheatList[name]=obj
             end
         end
 
-        searchProcessCheats()
-        return cheatList
-    end
-    function searchProcessCheats()
         print("User:", os.getenv("USER"))
         --Load All process owned by current user
         local pipe=io.popen("ps -au "..os.getenv("USER").." | awk '{print $4}'")
         for line in pipe:lines() do
-            print(line)
+           print(line)
+            local name,obj
+            --print(name,":",obj.pathName)
+            name,obj = cheatTable.search(line)
+            --If something found
+            if name ~= nil and obj ~= nil then
+                cheatList[name]=obj
+            end
         end
         pipe:close()
+        
+        return cheatList
     end
 
     function show(geometry)
@@ -78,7 +75,7 @@ local function new(basePath)
         if not glob then
             glob = radical.context()
             glob.parent_geometry = geometry
-            local cheatList = searchClientCheats()
+            local cheatList = searchCheats()
             --Show cheat Lists
             if cheatList ~= nil then 
                 for name, cheat in pairs(cheatList) do
