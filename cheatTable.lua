@@ -6,7 +6,7 @@ return {
         path    = "lua",
         icon    = "",
         pattern = { "%a%.lua"},
-        l   = {"http://www.lua.org/manual/5.2/"},
+        links   = {"http://www.lua.org/manual/5.2/"},
 
     },
     ["Vim"] = {
@@ -14,6 +14,6 @@ return {
         path    = "vim",
         icon        = "",
         pattern       = { " vim " },
-        l   = {"aaa"},
+        links   = {"aaa"},
     }
 }

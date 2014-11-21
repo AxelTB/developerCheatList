@@ -13,7 +13,7 @@ local radical      = require("radical"        )
 --local surface      = require("gears.surface"  )
 --local glib         = require("lgi").GLib
 --local filetree     = require("customMenu.filetree")
-local cheatTable = require("cheatCode.cheatTable")
+local cheatTable = require("devCheats.cheatTable")
 
 local module = {}
 capi ={client=client}
@@ -29,6 +29,13 @@ local function new(basePath)
 
     local cheatsPath= basePath or os.getenv("HOME")..'/cheatCodes/'
 
+    function spawnAndClose(command)
+        if command ~= nil then
+            util.spawn(command)
+            show();
+        end
+    end
+
     function searchClientCheats()
         local cheatList={}
         cheatList['foo']={path='../.cheatCode'}
@@ -37,23 +44,38 @@ local function new(basePath)
             print("Client",c.name)
             --Confront with cheatTable
             for name,obj in pairs(cheatTable) do
+                for typeN,inData in pairs(obj) do
+                    print(typeN,inData)
+                end
+
                 --print(name,":",obj.pathName)
                 for ii,pattern in pairs(obj.pattern) do
                     --print("P:",pattern)
                     --If pattern found
                     if string.match(c.name,pattern) then
                         cheatList[name]=obj
-                        print("Load",c.name,":",pattern,"@",obj.l)
+                        print("Load",c.name,":",pattern,"@",obj.links)
                     end
                 end
             end
         end
+
+        searchProcessCheats()
         return cheatList
+    end
+    function searchProcessCheats()
+        print("User:", os.getenv("USER"))
+        --Load All process owned by current user
+        local pipe=io.popen("ps -au "..os.getenv("USER").." | awk '{print $4}'")
+        for line in pipe:lines() do
+            print(line)
+        end
+        pipe:close()
     end
 
     function show(geometry)
         print("Show")
-        if glob == nil then
+        if not glob then
             glob = radical.context()
             glob.parent_geometry = geometry
             local cheatList = searchClientCheats()
@@ -68,7 +90,7 @@ local function new(basePath)
                                                     local linkMenu = radical.context()
                                                     for j,link in pairs(cheat.links) do
                                                         linkMenu:add_item(util.table.join({text=link, button1= function()
-                                                                        util.spawn("xdg-open "..link)
+                                                                        spawnAndClose("xdg-open "..link)
                                                                     end}))
                                                     end
                                                     return linkMenu
@@ -80,29 +102,29 @@ local function new(basePath)
                                 local lsDir=io.popen('ls '..cheatsPath..cheat.path)
                                 for line in lsDir:lines() do
                                     parent:add_item(util.table.join({text=line,button1= function()
-                                                    util.spawn("xdg-open "..cheatsPath..cheat.path.."/"..line)
+                                                    spawnAndClose("xdg-open "..cheatsPath..cheat.path.."/"..line)
                                                 end}))
                                 end
                                 lsDir:close()
 
                                 return parent
                             end})
-
                 end
             else
                 print("ERR@cheatCode: Unable to load cheat")
             end
 
-
+            if geometry then
+                glob.parent_geometry = geometry
+            end
+            --Show
+            glob.visible = true
+        else
+            -- Hide
+            glob.visible = false
+            glob = nil
+            --Destroy menu when closed
         end
-
-
-        if geometry then
-            glob.parent_geometry = geometry
-        end
-        glob.visible = not glob.visible
-        --Destroy menu when closed
-        if not glob.visible then glob = nil end
     end
 
     --Constructor operations-----------------------------------------------------------------------------------------
