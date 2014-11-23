@@ -18,9 +18,16 @@ local module = {
         },
         ["Bash"] = {
             sticky      = false,
-            path    = "vim",
+            path    = "bash",
             icon        = "",
-            pattern       = { "bash" },
+            pattern       = { "bash","%.sh" },
+            links   = {"aaa"},
+        },
+        ["Javascript"] = {
+            sticky      = false,
+            path    = "javascript",
+            icon        = "",
+            pattern       = { ".js" },
             links   = {"aaa"},
         },
     }
