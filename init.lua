@@ -127,7 +127,7 @@ local function new(basePath)
         end
     end
 
-    -- Fast cheatsheet functions
+    -- Fast cheatsheet functions------------------------------------------------------
     function findPrincipalCheat()
         -- Search cheat for focused client
         if client.focus ~= nil then
@@ -157,6 +157,7 @@ local function new(basePath)
         local lsDir=io.popen('ls '..cheatsPath..focusedCheat.path..'| grep cheatsheet')
         local buffer=lsDir:read("*all")
         print("Found cheat sheet:",buffer)
+        if #buffer > 5 then util.spawn("xdg-open "..cheatsPath..focusedCheat.path.."/"..buffer) end
         lsDir:close()
     end
     --Constructor operations-----------------------------------------------------------------------------------------
