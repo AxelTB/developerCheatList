@@ -16,16 +16,23 @@ local radical      = require("radical"        )
 local cheatTable = require("devCheats.cheatTable")
 
 local module = {}
-capi ={client=client}
+capi ={client=client,timer=timer}
 
 
 -- Create a cheatCode widget
 --          basePath = absolute path to cheatCodes tree
 local function new(basePath)
+
     local glob = nil
     local widget = nil
-    local idle = nil
-    local layouts = {}
+
+    local focusedCheat = nil
+    local focusUpdateTimer = capi.timer({ timeout = 2 })
+    focusUpdateTimer:connect_signal("timeout", function()
+            findPrincipalCheat()
+            updateWidgetIcon()
+        end)
+    focusUpdateTimer:start()
 
     local cheatsPath= basePath or os.getenv("HOME")..'/cheatCodes/'
 
@@ -54,7 +61,7 @@ local function new(basePath)
         --Load All process owned by current user
         local pipe=io.popen("ps -au "..os.getenv("USER").." | awk '{print $4}'")
         for line in pipe:lines() do
-           print(line)
+            print(line)
             local name,obj
             --print(name,":",obj.pathName)
             name,obj = cheatTable.search(line)
@@ -64,7 +71,7 @@ local function new(basePath)
             end
         end
         pipe:close()
-        
+
         return cheatList
     end
 
@@ -120,6 +127,38 @@ local function new(basePath)
         end
     end
 
+    -- Fast cheatsheet functions
+    function findPrincipalCheat()
+        -- Search cheat for focused client
+        if client.focus ~= nil then
+            local name,obj = cheatTable.search(client.focus.name)
+            print("Focused:",name)
+
+            --Save focused cheat
+            focusedCheat = obj
+
+            --Set update when client focus lost
+            --client.focus:connect_signal('unfocus',findPrincipalCheat)
+            return obj
+        else
+            print("No focus")
+        end
+    end
+    function updateWidgetIcon()
+        local fullPath = cheatsPath..focusedCheat.path.."/icon.png"
+        if util.file_readable(fullPath) then
+            widget:set_image(fullPath)
+        else
+            widget:set_image(util.getdir("config").."/data/flags-24x24/ag.png")
+        end
+    end
+    function showCheatSheet()
+        -- Local files
+        local lsDir=io.popen('ls '..cheatsPath..focusedCheat.path..'| grep cheatsheet')
+        local buffer=lsDir:read("*all")
+        print("Found cheat sheet:",buffer)
+        lsDir:close()
+    end
     --Constructor operations-----------------------------------------------------------------------------------------
 
     if not widget then
@@ -130,7 +169,9 @@ local function new(basePath)
     widget.fit = function(self,w,h) return h,h end
 
     widget:buttons( util.table.join(
-            button({ }, 3, function(geometry) show(geometry)  end))
+            button({ }, 1, showCheatSheet),
+            button({ }, 3, function(geometry) show(geometry)  end)
+        )
     )
 
     widget:set_image(util.getdir("config").."/data/flags-24x24/ag.png")
