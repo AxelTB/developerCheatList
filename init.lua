@@ -20,21 +20,43 @@ capi ={client=client,timer=timer}
 
 
 -- Create a cheatCode widget
---          basePath = absolute path to cheatCodes tree
-local function new(basePath)
+-- args = {
+--          basePath    Absolute path to cheatCodes tree
+--          cheatCmd    Cheatsheet command
+--          refCmd      Reference command
+--          linkCmd     Link Command
+--      }
+local function new(args)
 
     local glob = nil
     local widget = nil
 
     local focusedCheat = nil
     local focusUpdateTimer = capi.timer({ timeout = 2 })
+    
+    local basePath,cheatCmd,refCmd,linkCmd = nil,nil,nil,nil
+    
+    -- Parse args:
+    if args ~= nil then
+        basePath=args.basePath
+        cheatCmd=args.cheatCmd
+        refCmd=args.refCmd
+        linkCmd=args.linkCmd
+        
+    end
+    --Set default on nil variables
+    basePath = basePath or os.getenv("HOME")..'/cheatCodes/'
+    cheatCmd = (cheatCmd or "xdg-open").." "
+    refCmd = (refCmd or "xdg-open").." "
+    linkCmd = (linkCmd or "xdg-open").." "
+    
     focusUpdateTimer:connect_signal("timeout", function()
             findPrincipalCheat()
             updateWidgetIcon()
         end)
     focusUpdateTimer:start()
 
-    local cheatsPath= basePath or os.getenv("HOME")..'/cheatCodes/'
+    
 
     function spawnAndClose(command)
         if command ~= nil then
@@ -61,7 +83,7 @@ local function new(basePath)
         --Load All process owned by current user
         local pipe=io.popen("ps -au "..os.getenv("USER").." | awk '{print $4}'")
         for line in pipe:lines() do
-            print(line)
+            --print(line)
             local name,obj
             --print(name,":",obj.pathName)
             name,obj = cheatTable.search(line)
@@ -92,17 +114,18 @@ local function new(basePath)
                                                     local linkMenu = radical.context()
                                                     for j,link in pairs(cheat.links) do
                                                         linkMenu:add_item(util.table.join({text=link, button1= function()
-                                                                        spawnAndClose("xdg-open "..link)
+                                                                        spawnAndClose(linkCmd..link)
                                                                     end}))
                                                     end
                                                     return linkMenu
                                                 end}))
                                 end
                                 -- Local files
-                                local lsDir=io.popen('ls '..cheatsPath..cheat.path)
+                                local lsDir=io.popen('ls '..basePath..cheat.path)
                                 for line in lsDir:lines() do
                                     parent:add_item(util.table.join({text=line,button1= function()
-                                                    spawnAndClose("xdg-open "..cheatsPath..cheat.path.."/"..line)
+                                                    --Spawn Reference
+                                                    spawnAndClose(refCmd..basePath..cheat.path.."/"..line)
                                                 end}))
                                 end
                                 lsDir:close()
@@ -145,7 +168,7 @@ local function new(basePath)
         end
     end
     function updateWidgetIcon()
-        local fullPath = cheatsPath..focusedCheat.path.."/icon.png"
+        local fullPath = basePath..focusedCheat.path.."/icon.png"
         if util.file_readable(fullPath) then
             widget:set_image(fullPath)
         else
@@ -154,14 +177,17 @@ local function new(basePath)
     end
     function showCheatSheet()
         -- Local files
-        local lsDir=io.popen('ls '..cheatsPath..focusedCheat.path..'| grep cheatsheet')
+        local lsDir=io.popen('ls '..basePath..focusedCheat.path..'| grep cheatsheet')
         local buffer=lsDir:read("*all")
         print("Found cheat sheet:",buffer)
-        if #buffer > 5 then util.spawn("xdg-open "..cheatsPath..focusedCheat.path.."/"..buffer) end
+        --Spawn CheatSheet
+        if #buffer > 5 then util.spawn(cheatCmd..basePath..focusedCheat.path.."/"..buffer) end
         lsDir:close()
     end
     --Constructor operations-----------------------------------------------------------------------------------------
+    
 
+    --Create widget
     if not widget then
         widget = wibox.widget.imagebox()
     else
@@ -175,6 +201,7 @@ local function new(basePath)
         )
     )
 
+    --Set default image
     widget:set_image(util.getdir("config").."/data/flags-24x24/ag.png")
 
     return widget
