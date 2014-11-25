@@ -30,6 +30,20 @@ local module = {
             pattern       = { ".js" },
             links   = {"aaa"},
         },
+        ["C++"] = {
+            sticky      = false,
+            path    = "cpp",
+            icon        = "",
+            pattern       = { ".js" },
+            links   = {"aaa"},
+        },
+        ["Javascript"] = {
+            sticky      = false,
+            path    = "javascript",
+            icon        = "",
+            pattern       = { ".js" },
+            links   = {"aaa"},
+        },
     }
 }
 module.search =function (string)
