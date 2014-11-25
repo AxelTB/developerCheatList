@@ -1,4 +1,3 @@
---local cheatPath = os.getenv("HOME").."/cheatCodes";
 local module = {
     table = {
         ["LUA"] = {
@@ -27,21 +26,21 @@ local module = {
             sticky      = false,
             path    = "javascript",
             icon        = "",
-            pattern       = { ".js" },
+            pattern       = { "%.js" },
             links   = {"aaa"},
         },
         ["C++"] = {
             sticky      = false,
             path    = "cpp",
             icon        = "",
-            pattern       = { ".js" },
+            pattern       = { "%.cpp" },
             links   = {"aaa"},
         },
         ["Javascript"] = {
             sticky      = false,
             path    = "javascript",
             icon        = "",
-            pattern       = { ".js" },
+            pattern       = { "%.c" },
             links   = {"aaa"},
         },
     }
@@ -51,7 +50,6 @@ module.search =function (string)
         for ii,pattern in pairs(obj.pattern) do
             --If patterns found
             if string.match(string,pattern) then
-                --print("Load",string,":",name)
                 --Search hit
                 return name,obj
             end
