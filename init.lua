@@ -25,14 +25,15 @@ capi ={client=client,timer=timer}
 --          cheatCmd    Cheatsheet command
 --          refCmd      Reference command
 --          linkCmd     Link Command
+--          updateT     Seconds between focused client update
 --      }
 local function new(args)
 
-    local glob = nil
-    local widget = nil
+    --Global menu and widget
+    local glob,widget = nil,nil
 
-    local focusedCheat = nil
-    local focusUpdateTimer = capi.timer({ timeout = 2 })
+    --Focused Cheat Variables (Timer set to 2 seconds)
+    local focusedCheat,focusUpdateTimer = nil,nil
     
     local basePath,cheatCmd,refCmd,linkCmd = nil,nil,nil,nil
     
@@ -42,13 +43,14 @@ local function new(args)
         cheatCmd=args.cheatCmd
         refCmd=args.refCmd
         linkCmd=args.linkCmd
-        
+        if args.updateT then focusUpdateTimer = capi.timer({ timeout = args.updateT }) end
     end
     --Set default on nil variables
     basePath = basePath or os.getenv("HOME")..'/cheatCodes/'
     cheatCmd = (cheatCmd or "xdg-open").." "
     refCmd = (refCmd or "xdg-open").." "
     linkCmd = (linkCmd or "xdg-open").." "
+    focusUpdateTimer = focusUpdateTimer or capi.timer({ timeout = 2 })
     
     focusUpdateTimer:connect_signal("timeout", function()
             findPrincipalCheat()
@@ -160,8 +162,6 @@ local function new(args)
             --Save focused cheat
             focusedCheat = obj
 
-            --Set update when client focus lost
-            --client.focus:connect_signal('unfocus',findPrincipalCheat)
             return obj
         else
             print("No focus")
