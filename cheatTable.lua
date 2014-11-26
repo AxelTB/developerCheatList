@@ -1,10 +1,10 @@
 local module = {
     table = {
         ["LUA"] = {
-            sticky  = false,
+            sticky  = true,
             path    = "lua",
             icon    = "",
-            pattern = { "%a%.lua"},
+            pattern = { "%.lua "},
             links   = {"http://www.lua.org/manual/5.2/"},
 
         },
@@ -19,39 +19,44 @@ local module = {
             sticky      = false,
             path    = "bash",
             icon        = "",
-            pattern       = { "bash","%.sh" },
+            pattern       = { "bash","%.sh " },
             links   = {"aaa"},
         },
         ["Javascript"] = {
             sticky      = false,
             path    = "javascript",
             icon        = "",
-            pattern       = { "%.js" },
+            pattern       = { "%.js " },
             links   = {"aaa"},
         },
         ["C++"] = {
             sticky      = false,
             path    = "cpp",
             icon        = "",
-            pattern       = { "%.cpp" },
+            pattern       = { "%.cpp " },
             links   = {"aaa"},
         },
-        ["Javascript"] = {
+        ["C"] = {
             sticky      = false,
-            path    = "javascript",
+            path    = "c",
             icon        = "",
-            pattern       = { "%.c" },
+            pattern       = { "%.c ","%.h " },
             links   = {"aaa"},
         },
     }
 }
-module.search =function (string)
+--String: string to search in
+--excludeSticky: exclude sticky item into search
+module.search =function (string,excludeSticky)
     for name,obj in pairs(module.table) do
         for ii,pattern in pairs(obj.pattern) do
-            --If patterns found
-            if string.match(string,pattern) then
-                --Search hit
-                return name,obj
+            -- Check for sticky
+            if not excludeSticky or not obj.sticky then
+                --If patterns found
+                if string.match(string,pattern) then
+                    --Search hit
+                    return name,obj
+                end
             end
         end
     end
@@ -59,4 +64,15 @@ module.search =function (string)
     return nil,nil
 end
 
+module.getSticky = function()
+    local stickyCheats = {}
+    for name,obj in pairs(module.table) do
+        --Save sticky cheats
+        if obj.sticky then
+            stickyCheats[name]=obj
+        end
+    end
+
+    return stickyCheats
+end
 return module

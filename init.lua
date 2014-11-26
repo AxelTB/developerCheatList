@@ -1,21 +1,11 @@
-local print = print
---local io,table = io,table
-local setmetatable  = setmetatable
-local string,ipairs = string,ipairs
 local wibox        = require("wibox"          )
---local cairo        = require("lgi"            ).cairo
---local color        = require("gears.color"    )
 local button       = require( "awful.button"  )
 local fd_async     = require("utils.fd_async" )
 local util         = require("awful.util"     )
 local radical      = require("radical"        )
---local beautiful    = require("beautiful"      )
---local surface      = require("gears.surface"  )
---local glib         = require("lgi").GLib
---local filetree     = require("customMenu.filetree")
 local cheatTable = require("devCheats.cheatTable")
 
-local module = {}
+local moduleCheat = {}
 capi ={client=client,timer=timer}
 
 
@@ -30,14 +20,17 @@ capi ={client=client,timer=timer}
 local function new(args)
 
     --Global menu and widget
-    local glob,widget = nil,nil
+    local globMenu,widget = nil,nil
 
-    --Focused Cheat Variables (Timer set to 2 seconds)
+    --Focused Cheat Variables
     local focusedCheat,focusUpdateTimer = nil,nil
     
     local basePath,cheatCmd,refCmd,linkCmd = nil,nil,nil,nil
     
-    -- Parse args:
+    --Sticky cheats
+    local stickyCheats=cheatTable.getSticky()
+    
+    -- Parse args:-------------------------------------------------------------------
     if args ~= nil then
         basePath=args.basePath
         cheatCmd=args.cheatCmd
@@ -52,6 +45,7 @@ local function new(args)
     linkCmd = (linkCmd or "xdg-open").." "
     focusUpdateTimer = focusUpdateTimer or capi.timer({ timeout = 2 })
     
+    --Set update timer functions------------------------------------------------------
     focusUpdateTimer:connect_signal("timeout", function()
             findPrincipalCheat()
             updateWidgetIcon()
@@ -59,14 +53,15 @@ local function new(args)
     focusUpdateTimer:start()
 
     
-
+--Spawn cmd and close menu
     function spawnAndClose(command)
         if command ~= nil then
             util.spawn(command)
-            show();
+            toggle();
         end
     end
 
+--Search cheat for open client and running process and returns a list of them
     function searchCheats()
         local cheatList={}
         --Scan clients
@@ -74,21 +69,20 @@ local function new(args)
             local name,obj
 
             --print(name,":",obj.pathName)
-            name,obj = cheatTable.search(c.name)
+            name,obj = cheatTable.search(c.name,true)
             --If something found
             if name ~= nil and obj ~= nil then
                 cheatList[name]=obj
             end
         end
 
-        print("User:", os.getenv("USER"))
         --Load All process owned by current user
         local pipe=io.popen("ps -au "..os.getenv("USER").." | awk '{print $4}'")
         for line in pipe:lines() do
             --print(line)
             local name,obj
             --print(name,":",obj.pathName)
-            name,obj = cheatTable.search(line)
+            name,obj = cheatTable.search(line,true)
             --If something found
             if name ~= nil and obj ~= nil then
                 cheatList[name]=obj
@@ -99,16 +93,17 @@ local function new(args)
         return cheatList
     end
 
-    function show(geometry)
+    function toggle(geometry)
 
-        if not glob then
-            glob = radical.context()
-            glob.parent_geometry = geometry
+        if not globMenu then
+            globMenu = radical.context()
+            globMenu.parent_geometry = geometry
             local cheatList = searchCheats()
             --Show cheat Lists
             if cheatList ~= nil then 
+                --Add cheat for active software
                 for name, cheat in pairs(cheatList) do
-                    glob:add_item({text=name, sub_menu = function() 
+                    globMenu:add_item({text=name, sub_menu = function() 
                                 local parent = radical.context()
                                 -- Web links
                                 if cheat.links then
@@ -135,19 +130,50 @@ local function new(args)
                                 return parent
                             end})
                 end
+                --AXTODO: Maybe a separator?
+                --Add sticky cheats
+                for name, cheat in pairs(stickyCheats) do
+                    globMenu:add_item({text=name, sub_menu = function() 
+                                local parent = radical.context()
+                                -- Web links
+                                if cheat.links then
+                                    parent:add_item(util.table.join({text="Links",sub_menu= function()
+                                                    local linkMenu = radical.context()
+                                                    for j,link in pairs(cheat.links) do
+                                                        linkMenu:add_item(util.table.join({text=link, button1= function()
+                                                                        spawnAndClose(linkCmd..link)
+                                                                    end}))
+                                                    end
+                                                    return linkMenu
+                                                end}))
+                                end
+                                -- Local files
+                                local lsDir=io.popen('ls '..basePath..cheat.path)
+                                for line in lsDir:lines() do
+                                    parent:add_item(util.table.join({text=line,button1= function()
+                                                    --Spawn Reference
+                                                    spawnAndClose(refCmd..basePath..cheat.path.."/"..line)
+                                                end}))
+                                end
+                                lsDir:close()
+
+                                return parent
+                            end})
+                end
+                
             else
                 print("ERR@cheatCode: Unable to load cheat")
             end
 
             if geometry then
-                glob.parent_geometry = geometry
+                globMenu.parent_geometry = geometry
             end
             --Show
-            glob.visible = true
+            globMenu.visible = true
         else
             -- Hide
-            glob.visible = false
-            glob = nil
+            globMenu.visible = false
+            globMenu = nil
             --Destroy menu when closed
         end
     end
@@ -157,7 +183,6 @@ local function new(args)
         -- Search cheat for focused client
         if client.focus ~= nil then
             local name,obj = cheatTable.search(client.focus.name)
-            print("Focused:",name)
 
             --Save focused cheat
             focusedCheat = obj
@@ -179,9 +204,11 @@ local function new(args)
         -- Local files
         local lsDir=io.popen('ls '..basePath..focusedCheat.path..'| grep cheatsheet')
         local buffer=lsDir:read("*all")
-        print("Found cheat sheet:",buffer)
+
         --Spawn CheatSheet
-        if #buffer > 5 then util.spawn(cheatCmd..basePath..focusedCheat.path.."/"..buffer) end
+        if #buffer > 5 then
+            util.spawn(cheatCmd..basePath..focusedCheat.path.."/"..buffer)
+        end
         lsDir:close()
     end
     --Constructor operations-----------------------------------------------------------------------------------------
@@ -197,7 +224,7 @@ local function new(args)
 
     widget:buttons( util.table.join(
             button({ }, 1, showCheatSheet),
-            button({ }, 3, function(geometry) show(geometry)  end)
+            button({ }, 3, function(geometry) toggle(geometry)  end)
         )
     )
 
@@ -208,5 +235,4 @@ local function new(args)
 end
 
 
-return setmetatable(module, { __call = function(_, ...) return new(...) end })
--- kate: space-indent on; indent-width 2; replace-tabs on;
+return setmetatable(moduleCheat, { __call = function(_, ...) return new(...) end })
