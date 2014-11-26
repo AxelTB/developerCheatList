@@ -193,6 +193,7 @@ local function new(args)
         end
     end
     function updateWidgetIcon()
+        if not focusedCheat then return end
         local fullPath = basePath..focusedCheat.path.."/icon.png"
         if util.file_readable(fullPath) then
             widget:set_image(fullPath)
