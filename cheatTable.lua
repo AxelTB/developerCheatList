@@ -1,7 +1,7 @@
 local module = {
     table = {
         ["LUA"] = {
-            sticky  = true,
+            sticky  = false,
             path    = "lua",
             icon    = "",
             pattern = { "%.lua "},
@@ -27,20 +27,27 @@ local module = {
             path    = "javascript",
             icon        = "",
             pattern       = { "%.js " },
-            links   = {"aaa"},
+            links   = {"http://www.javascript.su/"},
         },
         ["C++"] = {
             sticky      = false,
             path    = "cpp",
             icon        = "",
             pattern       = { "%.cpp " },
-            links   = {"aaa"},
+            links   = {"http://cs.fit.edu/~mmahoney/cse2050/how2cpp.html"},
         },
         ["C"] = {
             sticky      = false,
             path    = "c",
             icon        = "",
             pattern       = { "%.c ","%.h " },
+            links   = {"aaa"},
+        },
+        ["Git"] = {
+            sticky      = true,
+            path    = "git",
+            icon        = "",
+            pattern       = { "git" },
             links   = {"aaa"},
         },
     }

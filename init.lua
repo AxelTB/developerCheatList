@@ -188,8 +188,6 @@ local function new(args)
             focusedCheat = obj
 
             return obj
-        else
-            print("No focus")
         end
     end
     function updateWidgetIcon()
